@@ -28,6 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::resource('/user', UserController::class);
   });
   Route::get('/college/test', [CollegeController::class, 'test']);
+  Route::get('/user/getfaculty', [UserController::class, 'getFaculty']);
+  Route::get('/user/getstudents', [UserController::class, 'getStudents']);
+  Route::get('/user/getbycollege/{id}', [UserController::class, 'getByCollege']);
   Route::resource('/college', CollegeController::class);
   Route::resource('/reviewer', ReviewerController::class);
   Route::resource('/program', ProgramController::class);

@@ -14,10 +14,12 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
+            'idnum' => 'required|integer|unique:users',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'role' => 'required|string|in:admin,faculty,student',
+            'position' => 'nullable|string',
             'password' => 'required|string|confirmed|min:8',
             'year_level'=>'nullable|integer|min:1|max:4',
             'college_id' => 'required|exists:colleges,id',  
@@ -25,10 +27,12 @@ class AuthController extends Controller
         ]);
 
         $user = User::create([
+            'idnum' => $request->idnum,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'role' => $request->role,
+            'position' => $request->position,
             'year_level' => $request->year_level,
             'password' => Hash::make($request->password),
             'college_id' => $request->college_id,
