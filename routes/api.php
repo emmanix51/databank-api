@@ -35,17 +35,19 @@ Route::middleware('auth:sanctum')->group(function () {
   
   Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
-Route::get('/user/getfaculty', [UserController::class, 'getFaculty']);
-Route::get('/user/getstudents', [UserController::class, 'getStudents']);
-Route::get('/user/getheads', [UserController::class, 'getHeads']);
 Route::get('/user/getbycollege/{id}', [UserController::class, 'getByCollege']);
 Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
-Route::post('/user/college/student', [UserController::class, 'addStudentToCollege']);
-Route::post('/user/college/faculty', [UserController::class, 'addFacultyToCollege']);
-Route::post('/user/college/head', [UserController::class, 'addHeadToCollege']);
-Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
+Route::get('/user/getbycollege/{college_id}/{role}', [UserController::class, 'getByCollegeWithRole']);
+Route::get('/user/getbyrole/{role}', [UserController::class, 'getByRole']);
 Route::resource('/user', UserController::class);
 
+// Route::get('/user/getfaculty', [UserController::class, 'getFaculty']);
+// Route::get('/user/getstudents', [UserController::class, 'getStudents']);
+// Route::get('/user/getheads', [UserController::class, 'getHeads']);X
+// Route::get('/user/getbycollege/{college_id}', [UserController::class, 'getByCollegeWithRole']);
+// Route::post('/user/college/student', [UserController::class, 'addStudentToCollege']);
+// Route::post('/user/college/faculty', [UserController::class, 'addFacultyToCollege']);
+// Route::post('/user/college/head', [UserController::class, 'addHeadToCollege']);
 
 Route::get('/test', function () {
     return 'api call working';
