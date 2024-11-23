@@ -25,7 +25,7 @@ class User extends Authenticatable
         'last_name',
         'email',
         'role',
-        'position',
+        // 'position',
         'college_id',
         'program_id',
         'year_level',
@@ -58,5 +58,9 @@ class User extends Authenticatable
     public function college()
     {
         return $this->belongsTo(College::class);
+    }
+    public function Program()
+    {
+        return $this->belongsTo(Program::class);
     }
 }

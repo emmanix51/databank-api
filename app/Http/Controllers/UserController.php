@@ -138,6 +138,21 @@ class UserController extends Controller
 
     }
 
+    public function getHeads()
+    {
+        // Retrieve all users where the 'role' is 'faculty'
+        $heads = User::whereIn('role', ['dean','programhead'])->with('college')->get();
+
+        // Check if there are any users
+        if ($heads->isEmpty()) {
+            return response()->json(['error' => 'No faculty members found'], 404);
+        }
+
+        // Return the list of faculty members
+        return response()->json(['heads' => $heads], 200);
+    }
+
+
     public function getFaculty()
     {
         // Retrieve all users where the 'role' is 'faculty'
@@ -155,7 +170,7 @@ class UserController extends Controller
     public function getStudents()
     {
         // Retrieve all users where the 'role' is 'faculty'
-        $students = User::where('role', 'student')->get();
+        $students = User::where('role', 'student')->with('college','program')->get();
 
         // Check if there are any users
         if ($students->isEmpty()) {
@@ -177,5 +192,18 @@ class UserController extends Controller
 
         // Return the list of faculty members
         return response()->json(['collegeUsers' => $collegeUsers], 200);
+    }
+    public function getByProgram($id)
+    {
+        // Retrieve all users where the 'role' is 'faculty'
+        $programUsers = User::where('program_id', $id)->get();
+
+        // Check if there are any users
+        if ($programUsers->isEmpty()) {
+            return response()->json(['error' => 'No members from this program found'], 404);
+        }
+
+        // Return the list of faculty members
+        return response()->json(['programUsers' => $programUsers], 200);
     }
 }

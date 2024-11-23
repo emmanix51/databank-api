@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
-            $table->enum('role', ['admin', 'faculty', 'student']);
-            $table->string('position')->nullable();
+            $table->enum('role', ['admin', 'faculty', 'student','dean','programhead']);
+            // $table->string('position')->nullable();
             $table->foreignId('college_id')->constrained()->onDelete('cascade');
             $table->foreignId('program_id')->constrained()->onDelete('cascade');
             $table->integer('year_level')->nullable();

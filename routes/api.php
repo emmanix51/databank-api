@@ -28,17 +28,23 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::resource('/user', UserController::class);
   });
   Route::get('/college/test', [CollegeController::class, 'test']);
-  Route::get('/user/getfaculty', [UserController::class, 'getFaculty']);
-  Route::get('/user/getstudents', [UserController::class, 'getStudents']);
-  Route::get('/user/getbycollege/{id}', [UserController::class, 'getByCollege']);
   Route::resource('/college', CollegeController::class);
   Route::resource('/reviewer', ReviewerController::class);
   Route::resource('/program', ProgramController::class);
-  Route::resource('/user', UserController::class);
   
   
   Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
+Route::get('/user/getfaculty', [UserController::class, 'getFaculty']);
+Route::get('/user/getstudents', [UserController::class, 'getStudents']);
+Route::get('/user/getheads', [UserController::class, 'getHeads']);
+Route::get('/user/getbycollege/{id}', [UserController::class, 'getByCollege']);
+Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
+Route::post('/user/college/student', [UserController::class, 'addStudentToCollege']);
+Route::post('/user/college/faculty', [UserController::class, 'addFacultyToCollege']);
+Route::post('/user/college/head', [UserController::class, 'addHeadToCollege']);
+Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
+Route::resource('/user', UserController::class);
 
 
 Route::get('/test', function () {
