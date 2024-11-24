@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Program;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProgramController extends Controller
 {
@@ -29,6 +30,25 @@ class ProgramController extends Controller
     public function store(Request $request)
     {
         //
+        $validator = Validator::make($request->all(), [
+            'program_name' => 'required|string',  
+            'college_id' => 'required|exists:colleges,id',  
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status'=>'error',
+                                    'message' => $validator->errors(),], 400);
+        }
+
+        $program = new Program();
+      
+        $program->program_name = $request->program_name;  
+        $program->college_id = $request->college_id;  
+        $program->save();
+
+        return response()->json(['status'=>'success',
+                                'message'=>'program created successfully!',
+                                'data' => $program], 201);
     }
 
     /**

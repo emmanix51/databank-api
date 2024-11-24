@@ -81,10 +81,10 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,faculty,student',
+            'password' => 'required|string|confirmed|min:6',
+            'role' => 'required|in:admin,faculty,student,dean,programhead',
             // 'position' => 'nullabe|string',
-            'year_level'=>'nullable|integer|min:1|max:4',
+            'year_level'=>'nullable|integer|max:4',
             'college_id' => 'required|exists:colleges,id',  
             'program_id' => 'required|exists:programs,id',
         ]);
@@ -228,38 +228,50 @@ class UserController extends Controller
 }
 
 
-public function getByCollegeWithRole(Request $request, $college_id, $role)
+public function getByCollegeWithRole(Request $request)
 {
-    // Validate the role
-    if (!in_array($role, ['student', 'faculty', 'programhead','dean'])) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Invalid role provided. Allowed roles are student, faculty, program head, and dean.',
-        ], 400);
+    // Retrieve the 'role' and 'college_id' query parameters
+    $role = $request->query('role'); // Optional, if not provided, fetch all users
+    $college_id = $request->query('college_id'); // Optional
+    $perPage = $request->query('per_page', 10); // Default to 10 per page if not specified
+
+    // Start building the query
+    $query = User::query(); // Start with all users
+
+    // If a 'role' is provided, filter by role
+    if ($role) {
+        // Validate the role
+        if (!in_array($role, ['student', 'faculty', 'programhead', 'dean'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid role provided. Allowed roles are student, faculty, program head, and dean.',
+            ], 400);
+        }
+        $query->where('role', $role); // Apply role filter
     }
 
-    // Define the number of results per page (you can adjust this number)
-    $perPage = $request->query('per_page', 1); // Default to 10 if not specified
+    // If 'college_id' is provided, filter by college_id
+    if ($college_id) {
+        $query->where('college_id', $college_id); // Apply college filter
+    }
 
-    // Retrieve users based on college_id and role, with pagination
-    $users = User::where('college_id', $college_id)
-                 ->where('role', $role)
-                 ->with('college', 'program') // You can load relationships if needed
-                 ->paginate($perPage);
+    // Retrieve users with pagination
+    $users = $query->with('college', 'program') // Load relationships if needed
+                   ->paginate($perPage);
 
     // Check if users are found
     if ($users->isEmpty()) {
         return response()->json([
             'status' => 'error',
-            'message' => "No {$role}s found in the specified college.",
+            'message' => 'No users found with the specified criteria.',
             'data' => []
         ], 404);
     }
 
-    // Return paginated users for the specified role and college, including pagination links
+    // Return paginated users, including pagination links
     return response()->json([
         'status' => 'success',
-        'message' => "{$role}s retrieved successfully.",
+        'message' => 'Users retrieved successfully.',
         'data' => [
             'users' => $users->items(), // The actual user data
             'pagination' => [
@@ -267,14 +279,65 @@ public function getByCollegeWithRole(Request $request, $college_id, $role)
                 'total_pages' => $users->lastPage(),
                 'total_items' => $users->total(),
                 'per_page' => $users->perPage(),
-                'first_page_url' => $users->url(1), // URL for the first page
-                'last_page_url' => $users->url($users->lastPage()), // URL for the last page
-                'next_page_url' => $users->nextPageUrl(), // URL for the next page (if exists)
-                'prev_page_url' => $users->previousPageUrl(), // URL for the previous page (if exists)
+                'first_page_url' => $users->url(1),
+                'last_page_url' => $users->url($users->lastPage()),
+                'next_page_url' => $users->nextPageUrl(),
+                'prev_page_url' => $users->previousPageUrl(),
             ]
         ]
     ], 200);
 }
+
+
+
+
+// public function getByCollegeWithRole(Request $request, $college_id, $role)
+// {
+//     // Validate the role
+//     if (!in_array($role, ['student', 'faculty', 'programhead','dean'])) {
+//         return response()->json([
+//             'status' => 'error',
+//             'message' => 'Invalid role provided. Allowed roles are student, faculty, program head, and dean.',
+//         ], 400);
+//     }
+
+//     // Define the number of results per page (you can adjust this number)
+//     $perPage = $request->query('per_page', 1); // Default to 10 if not specified
+
+//     // Retrieve users based on college_id and role, with pagination
+//     $users = User::where('college_id', $college_id)
+//                  ->where('role', $role)
+//                  ->with('college', 'program') // You can load relationships if needed
+//                  ->paginate($perPage);
+
+//     // Check if users are found
+//     if ($users->isEmpty()) {
+//         return response()->json([
+//             'status' => 'error',
+//             'message' => "No {$role}s found in the specified college.",
+//             'data' => []
+//         ], 404);
+//     }
+
+//     // Return paginated users for the specified role and college, including pagination links
+//     return response()->json([
+//         'status' => 'success',
+//         'message' => "{$role}s retrieved successfully.",
+//         'data' => [
+//             'users' => $users->items(), // The actual user data
+//             'pagination' => [
+//                 'current_page' => $users->currentPage(),
+//                 'total_pages' => $users->lastPage(),
+//                 'total_items' => $users->total(),
+//                 'per_page' => $users->perPage(),
+//                 'first_page_url' => $users->url(1), // URL for the first page
+//                 'last_page_url' => $users->url($users->lastPage()), // URL for the last page
+//                 'next_page_url' => $users->nextPageUrl(), // URL for the next page (if exists)
+//                 'prev_page_url' => $users->previousPageUrl(), // URL for the previous page (if exists)
+//             ]
+//         ]
+//     ], 200);
+// }
 
 
 
