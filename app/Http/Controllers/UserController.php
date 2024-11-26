@@ -87,6 +87,7 @@ class UserController extends Controller
             'year_level'=>'nullable|integer|max:4',
             'college_id' => 'required|exists:colleges,id',  
             'program_id' => 'required|exists:programs,id',
+            'phone_number' => 'required|integer|digits_between:10,15'
         ]);
 
         if ($validator->fails()) {
@@ -105,6 +106,7 @@ class UserController extends Controller
         $user->year_level = $request->year_level;
         $user->college_id = $request->college_id;  
         $user->program_id = $request->program_id;
+        $user->phone_number = $request->phone_number;
         $user->save();
 
         return response()->json(['status'=>'success',
@@ -145,11 +147,12 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,faculty,student',
+            'role' => 'required|in:admin,faculty,student,dean,programhead',
             // 'position' => 'nullabe|string',
-            'year_level'=>'nullable|integer|min:1|max:4',
+            'year_level'=>'nullable|integer|max:4',
             'college_id' => 'required|exists:colleges,id',  
             'program_id' => 'required|exists:programs,id',
+            'phone_number' => 'required|integer|digits_between:10,15'
         ]);
 
         if ($validator->fails()) {
@@ -164,6 +167,7 @@ class UserController extends Controller
         $user->year_level = $request->year_level;
         $user->college_id = $request->college_id;  
         $user->program_id = $request->program_id;
+        $user->phone_number = $request->phone_number;
         $user->save();
 
         return response()->json(['user' => $user], 201);
@@ -193,10 +197,10 @@ class UserController extends Controller
     public function getByRole(Request $request)
 {
     // Get the role from the query parameter, default to 'student' if not provided
-    $role = $request->query('role', 'student');  // Default to 'student' if no role is passed
+    $role = $request->query('role');  // Default to 'student' if no role is passed
 
     // Validate that the role is one of the accepted values
-    if (!in_array($role, ['student', 'faculty', 'head'])) {
+    if (!in_array($role, ['student', 'faculty', 'dean','programhead'])) {
         return response()->json([
             'status' => 'error',
             'message' => 'Invalid role provided. Allowed roles are student, faculty, head.',
@@ -230,36 +234,34 @@ class UserController extends Controller
 
 public function getByCollegeWithRole(Request $request)
 {
-    // Retrieve the 'role' and 'college_id' query parameters
-    $role = $request->query('role'); // Optional, if not provided, fetch all users
-    $college_id = $request->query('college_id'); // Optional
-    $perPage = $request->query('per_page', 10); // Default to 10 per page if not specified
+    
+    $role = $request->query('role'); 
+    $college_id = $request->query('college_id'); 
+    $perPage = $request->query('per_page', 3); 
 
-    // Start building the query
-    $query = User::query(); // Start with all users
+    
+    $query = User::query(); 
 
-    // If a 'role' is provided, filter by role
+    
     if ($role) {
         // Validate the role
-        if (!in_array($role, ['student', 'faculty', 'programhead', 'dean'])) {
+        if (!in_array($role, ['student', 'faculty', 'programhead', 'dean','admin'])) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid role provided. Allowed roles are student, faculty, program head, and dean.',
             ], 400);
         }
-        $query->where('role', $role); // Apply role filter
+        $query->where('role', $role);
     }
 
     // If 'college_id' is provided, filter by college_id
     if ($college_id) {
-        $query->where('college_id', $college_id); // Apply college filter
+        $query->where('college_id', $college_id); 
     }
 
-    // Retrieve users with pagination
-    $users = $query->with('college', 'program') // Load relationships if needed
+    $users = $query->with('college', 'program') 
                    ->paginate($perPage);
 
-    // Check if users are found
     if ($users->isEmpty()) {
         return response()->json([
             'status' => 'error',
@@ -268,12 +270,11 @@ public function getByCollegeWithRole(Request $request)
         ], 404);
     }
 
-    // Return paginated users, including pagination links
     return response()->json([
         'status' => 'success',
         'message' => 'Users retrieved successfully.',
         'data' => [
-            'users' => $users->items(), // The actual user data
+            'users' => $users->items(), 
             'pagination' => [
                 'current_page' => $users->currentPage(),
                 'total_pages' => $users->lastPage(),

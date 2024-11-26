@@ -35,16 +35,16 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::resource('/program', ProgramController::class);
 Route::resource('/college', CollegeController::class);
-// Route::get('/user/getbycollege/{id}', [UserController::class, 'getByCollege']);
 Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
-// Route::get('/user/getbycollege/{college_id?}/{role}', [UserController::class, 'getByCollegeWithRole']);
-Route::get('/user/getbycollege/{college_id?}/{role}', [UserController::class, 'getByCollegeWithRole']);
 Route::get('/user/getbycollege', [UserController::class, 'getByCollegeWithRole']);
-
-
 Route::get('/user/getbyrole/{role}', [UserController::class, 'getByRole']);
 Route::resource('/user', UserController::class);
 
+
+
+// Route::get('/user/getbycollege/{id}', [UserController::class, 'getByCollege']);
+// Route::get('/user/getbycollege/{college_id?}/{role}', [UserController::class, 'getByCollegeWithRole']);
+// Route::get('/user/getbycollege/{college_id?}/{role}', [UserController::class, 'getByCollegeWithRole']);
 // Route::get('/user/getfaculty', [UserController::class, 'getFaculty']);
 // Route::get('/user/getstudents', [UserController::class, 'getStudents']);
 // Route::get('/user/getheads', [UserController::class, 'getHeads']);X
