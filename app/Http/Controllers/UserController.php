@@ -87,7 +87,7 @@ class UserController extends Controller
             'year_level'=>'nullable|integer|max:4',
             'college_id' => 'required|exists:colleges,id',  
             'program_id' => 'required|exists:programs,id',
-            'phone_number' => 'required|integer|digits_between:10,15'
+            'phone_number' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -152,7 +152,7 @@ class UserController extends Controller
             'year_level'=>'nullable|integer|max:4',
             'college_id' => 'required|exists:colleges,id',  
             'program_id' => 'required|exists:programs,id',
-            'phone_number' => 'required|integer|digits_between:10,15'
+            'phone_number' => 'required|string'
         ]);
 
         if ($validator->fails()) {

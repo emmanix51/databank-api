@@ -15,34 +15,14 @@ class CollegeController extends Controller
     public function index()
     {
         //
-        $college = College::with('programs')->paginate(6);
-        // Check if no college are found
-        if ($college->isEmpty()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No college found.',
-                'data' => [
-                    'college' => [], // Return an empty array in 'college'
-                    'pagination' => [
-                        'current_page' => $college->currentPage(),
-                        'total_pages' => $college->lastPage(),
-                        'total_items' => $college->total(),
-                        'per_page' => $college->perPage(),
-                        'first_page_url' => $college->url(1),
-                        'last_page_url' => $college->url($college->lastPage()),
-                        'next_page_url' => $college->nextPageUrl(),
-                        'prev_page_url' => $college->previousPageUrl(),
-                    ]
-                ]
-            ], 404); // HTTP 404 for "not found"
-        }
-
-        // If college are found, return success with user data and pagination
+     $college = College::with('programs')->paginate(6);
+      // Check if no college are found
+    if ($college->isEmpty()) {
         return response()->json([
-            'status' => 'success',
-            'message' => 'Request processed successfully.',
+            'status' => 'error',
+            'message' => 'No college found.',
             'data' => [
-                'college' => $college->items(), // Get the actual user data
+                'college' => [], // Return an empty array in 'college'
                 'pagination' => [
                     'current_page' => $college->currentPage(),
                     'total_pages' => $college->lastPage(),
@@ -54,7 +34,27 @@ class CollegeController extends Controller
                     'prev_page_url' => $college->previousPageUrl(),
                 ]
             ]
-        ], 200); // HTTP 200 for "OK"
+        ], 404); // HTTP 404 for "not found"
+    }
+
+    // If college are found, return success with user data and pagination
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Request processed successfully.',
+        'data' => [
+            'college' => $college->items(), // Get the actual user data
+            'pagination' => [
+                'current_page' => $college->currentPage(),
+                'total_pages' => $college->lastPage(),
+                'total_items' => $college->total(),
+                'per_page' => $college->perPage(),
+                'first_page_url' => $college->url(1),
+                'last_page_url' => $college->url($college->lastPage()),
+                'next_page_url' => $college->nextPageUrl(),
+                'prev_page_url' => $college->previousPageUrl(),
+            ]
+        ]
+    ], 200); // HTTP 200 for "OK"
 
         // return response()->json(['test custom api'=>'works my nig word']);
 
@@ -71,7 +71,7 @@ class CollegeController extends Controller
     public function test()
     {
         //
-        return response()->json(['test custom api' => 'works my n word']);
+        return response()->json(['test custom api'=>'works my n word']);
     }
 
     /**
@@ -82,26 +82,22 @@ class CollegeController extends Controller
         //
         //
         $validator = Validator::make($request->all(), [
-            'college_name' => 'required|string',
+            'college_name' => 'required|string',  
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors(),
-            ], 400);
+            return response()->json(['status'=>'error',
+                                    'message' => $validator->errors(),], 400);
         }
 
         $college = new College();
-
-        $college->college_name = $request->college_name;
+      
+        $college->college_name = $request->college_name;  
         $college->save();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'college created successfully!',
-            'data' => $college
-        ], 201);
+        return response()->json(['status'=>'success',
+                                'message'=>'college created successfully!',
+                                'data' => $college], 201);
     }
 
     /**
