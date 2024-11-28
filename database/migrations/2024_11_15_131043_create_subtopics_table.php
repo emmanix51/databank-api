@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('subtopics', function (Blueprint $table) {
             $table->id();
+            $table->string('subtopic_name');
+            $table->foreignId('topic_id')->constrained()->onDelete('cascade');
+            $table->foreignId('program_id')->constrained()->onDelete('cascade');
+            $table->foreignId('college_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

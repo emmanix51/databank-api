@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('reviewers', function (Blueprint $table) {
             $table->id();
+            $table->string('reviewer_name');
+            $table->foreignId('topic_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subtopic_id')->constrained()->onDelete('cascade');
+            $table->foreignId('program_id')->constrained()->onDelete('cascade');
+            $table->foreignId('college_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
