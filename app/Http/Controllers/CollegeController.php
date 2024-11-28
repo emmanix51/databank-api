@@ -105,15 +105,14 @@ class CollegeController extends Controller
      */
     public function show(College $college)
     {
-        //
-    }
+        // Load related programs when showing a specific college
+        $college->load('programs');
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(College $college)
-    {
-        //
+        return response()->json([
+            'status' => 'success',
+            'message' => 'College details retrieved successfully.',
+            'data' => $college
+        ], 200);
     }
 
     /**
@@ -121,7 +120,27 @@ class CollegeController extends Controller
      */
     public function update(Request $request, College $college)
     {
-        //
+        // Validate incoming request for updating college
+        $validator = Validator::make($request->all(), [
+            'college_name' => 'required|string', // Assuming the college name is the only updatable field
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors(),
+            ], 400);
+        }
+
+        // Update the college details
+        $college->college_name = $request->college_name;
+        $college->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'College updated successfully!',
+            'data' => $college
+        ], 200);
     }
 
     /**

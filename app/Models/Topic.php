@@ -7,4 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Topic extends Model
 {
     //
+
+    public function reviewers()
+    {
+        return $this->hasMany(Reviewer::class);
+    }
+
+    
 }

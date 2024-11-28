@@ -28,15 +28,15 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::resource('/user', UserController::class);
   });
   Route::get('/college/test', [CollegeController::class, 'test']);
-  Route::resource('/reviewer', ReviewerController::class);
   
   Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
   Route::get('/user/getbycollege', [UserController::class, 'getByCollegeWithRole']);
   Route::get('/user/getbyrole/{role}', [UserController::class, 'getByRole']);
-  Route::resource('/user', UserController::class);
+  Route::resource('/reviewer', ReviewerController::class);
   
   Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
+Route::resource('/user', UserController::class);
 Route::resource('/program', ProgramController::class);
 Route::resource('/college', CollegeController::class);
 

@@ -10,6 +10,7 @@ class Reviewer extends Model
 
     protected $fillable = [
         'reviewer_name',
+        'reviewer_description',
         'topic_id',
         'subtopic_id',
         'college_id',
@@ -28,10 +29,10 @@ class Reviewer extends Model
     }
     public function topic()
     {
-        return $this->hasMany(Topic::class);
+        return $this->belongsTo(Topic::class);
     }
     public function subtopic()
     {
-        return $this->hasMany(Subtopic::class);
+        return $this->belongsTo(Subtopic::class);
     }
 }

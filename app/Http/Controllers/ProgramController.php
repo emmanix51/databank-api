@@ -14,6 +14,47 @@ class ProgramController extends Controller
     public function index()
     {
         //
+
+        $programs = Program::with('college')->paginate(6);
+      // Check if no college are found
+    if ($programs->isEmpty()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'No programs found.',
+            'data' => [
+                'programs' => [], // Return an empty array in 'programs'
+                'pagination' => [
+                    'current_page' => $programs->currentPage(),
+                    'total_pages' => $programs->lastPage(),
+                    'total_items' => $programs->total(),
+                    'per_page' => $programs->perPage(),
+                    'first_page_url' => $programs->url(1),
+                    'last_page_url' => $programs->url($programs->lastPage()),
+                    'next_page_url' => $programs->nextPageUrl(),
+                    'prev_page_url' => $programs->previousPageUrl(),
+                ]
+            ]
+        ], 404); // HTTP 404 for "not found"
+    }
+
+    // If programs are found, return success with user data and pagination
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Request processed successfully.',
+        'data' => [
+            'programs' => $programs->items(), // Get the actual user data
+            'pagination' => [
+                'current_page' => $programs->currentPage(),
+                'total_pages' => $programs->lastPage(),
+                'total_items' => $programs->total(),
+                'per_page' => $programs->perPage(),
+                'first_page_url' => $programs->url(1),
+                'last_page_url' => $programs->url($programs->lastPage()),
+                'next_page_url' => $programs->nextPageUrl(),
+                'prev_page_url' => $programs->previousPageUrl(),
+            ]
+        ]
+    ], 200);
     }
 
     /**

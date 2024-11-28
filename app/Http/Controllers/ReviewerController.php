@@ -69,8 +69,9 @@ class ReviewerController extends Controller
         // Validate incoming data
         $validator = Validator::make($request->all(), [
             'reviewer_name' => 'required|string|max:255',
-            'topic_id' => 'required|exists:topics,id',
-            'subtopic_id' => 'required|exists:subtopics,id',
+            'reviewer_description' => 'required',
+            'topic_id' => 'nullable|exists:topics,id',
+            'subtopic_id' => 'nullable|exists:subtopics,id',
             'program_id' => 'required|exists:programs,id',
             'college_id' => 'required|exists:colleges,id',
             'school_year' => 'nullable|integer',
@@ -86,6 +87,7 @@ class ReviewerController extends Controller
         // Create new reviewer record
         $reviewer = new Reviewer();
         $reviewer->reviewer_name = $request->reviewer_name;
+        $reviewer->reviewer_description = $request->reviewer_description;
         $reviewer->topic_id = $request->topic_id;
         $reviewer->subtopic_id = $request->subtopic_id;
         $reviewer->program_id = $request->program_id;
@@ -122,10 +124,12 @@ class ReviewerController extends Controller
         // Validate incoming data
         $validator = Validator::make($request->all(), [
             'reviewer_name' => 'required|string|max:255',
-            'topic_id' => 'required|exists:topics,id',
-            'subtopic_id' => 'required|exists:subtopics,id',
+            'reviewer_description' => 'required|string',
+            'topic_id' => 'nullable|exists:topics,id',
+            'subtopic_id' => 'nullable|exists:subtopics,id',
             'program_id' => 'required|exists:programs,id',
             'college_id' => 'required|exists:colleges,id',
+            'school_year' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -137,10 +141,12 @@ class ReviewerController extends Controller
 
         // Update the reviewer record
         $reviewer->reviewer_name = $request->reviewer_name;
+        $reviewer->reviewer_description = $request->reviewer_description;
         $reviewer->topic_id = $request->topic_id;
         $reviewer->subtopic_id = $request->subtopic_id;
         $reviewer->program_id = $request->program_id;
         $reviewer->college_id = $request->college_id;
+        $reviewer->school_year = $request->school_year;
         $reviewer->save();
 
         // Return success response with updated reviewer data
