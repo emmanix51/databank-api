@@ -14,6 +14,7 @@ class Reviewer extends Model
         'subtopic_id',
         'college_id',
         'program_id',
+        'school_year'
        
     ];
 

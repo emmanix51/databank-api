@@ -73,6 +73,7 @@ class ReviewerController extends Controller
             'subtopic_id' => 'required|exists:subtopics,id',
             'program_id' => 'required|exists:programs,id',
             'college_id' => 'required|exists:colleges,id',
+            'school_year' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -89,6 +90,7 @@ class ReviewerController extends Controller
         $reviewer->subtopic_id = $request->subtopic_id;
         $reviewer->program_id = $request->program_id;
         $reviewer->college_id = $request->college_id;
+        $reviewer->school_year = $request->school_year;
         $reviewer->save();
 
         // Return success response with created reviewer data
