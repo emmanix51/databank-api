@@ -5,9 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CollegeController;
+use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ReviewerController;
-
+use App\Http\Controllers\SubtopicController;
+use App\Http\Controllers\TopicController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -32,13 +34,18 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/user/getbyprogram/{id}', [UserController::class, 'getByProgram']);
   Route::get('/user/getbycollege', [UserController::class, 'getByCollegeWithRole']);
   Route::get('/user/getbyrole/{role}', [UserController::class, 'getByRole']);
+  Route::resource('/user', UserController::class);
   Route::resource('/reviewer', ReviewerController::class);
+  Route::get('/college/{id}/users', [CollegeController::class, 'getCollegeUsers']);
+  Route::resource('/program', ProgramController::class);
+  Route::resource('/college', CollegeController::class);
+  Route::resource('/topic', TopicController::class);
+  Route::resource('/subtopic', SubtopicController::class);
+  Route::get('questions/subtopic/{subtopicId}', [QuestionController::class, 'getQuestionsBySubtopic']);
+  Route::resource('/question', QuestionController::class);
   
   Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
-Route::resource('/user', UserController::class);
-Route::resource('/program', ProgramController::class);
-Route::resource('/college', CollegeController::class);
 
 
 
