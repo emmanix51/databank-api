@@ -7,9 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Subtopic extends Model
 {
     //
+    protected $fillable = ['subtopic_name', 'subtopic_description', 'topic_id'];
 
-    public function reviewers()
+    public function topic()
     {
-        return $this->hasMany(Reviewer::class);
+        return $this->belongsTo(Topic::class);
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
     }
 }

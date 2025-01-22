@@ -9,22 +9,34 @@ use App\Models\Program;
 use App\Models\College;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ReviewerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Retrieve reviewers with related data (you can adjust the relationships as needed)
-        $reviewers = Reviewer::with(['topic', 'subtopic', 'program', 'college'])->paginate(6);
+        $query = Reviewer::with(['college', 'program']);
 
-        // Check if no reviewers are found
+        if ($request->has('college_id')) {
+            $query->where('college_id', $request->college_id);
+        }
+
+        if ($request->has('program_id')) {
+            $query->where('program_id', $request->program_id);
+        }
+        if ($request->has('id')) {
+            $query->where('id', $request->id);
+        }
+
+        $reviewers = $query->paginate(6);
+
         if ($reviewers->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'No reviewers found.',
+                'message' => 'No reviewers found with the specified criteria.',
                 'data' => [
                     'reviewers' => [],
                     'pagination' => [
@@ -38,13 +50,12 @@ class ReviewerController extends Controller
                         'prev_page_url' => $reviewers->previousPageUrl(),
                     ]
                 ]
-            ], 404); // HTTP 404 for "not found"
+            ], 404);
         }
 
-        // Return success response with reviewers data and pagination
         return response()->json([
             'status' => 'success',
-            'message' => 'Request processed successfully.',
+            'message' => 'Reviewers retrieved successfully.',
             'data' => [
                 'reviewers' => $reviewers->items(),
                 'pagination' => [
@@ -58,49 +69,47 @@ class ReviewerController extends Controller
                     'prev_page_url' => $reviewers->previousPageUrl(),
                 ]
             ]
-        ], 200); // HTTP 200 for "OK"
+        ], 200);
     }
+
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        // Validate incoming data
         $validator = Validator::make($request->all(), [
             'reviewer_name' => 'required|string|max:255',
             'reviewer_description' => 'required',
-            'topic_id' => 'nullable|exists:topics,id',
-            'subtopic_id' => 'nullable|exists:subtopics,id',
             'program_id' => 'required|exists:programs,id',
             'college_id' => 'required|exists:colleges,id',
             'school_year' => 'nullable|integer',
+            'topic_ids' => 'nullable|array',
+            'topic_ids.*' => 'exists:topics,id',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()
-            ], 400); // Bad Request
+            return response()->json(['status' => 'error', 'message' => $validator->errors()], 400);
         }
 
-        // Create new reviewer record
-        $reviewer = new Reviewer();
-        $reviewer->reviewer_name = $request->reviewer_name;
-        $reviewer->reviewer_description = $request->reviewer_description;
-        $reviewer->topic_id = $request->topic_id;
-        $reviewer->subtopic_id = $request->subtopic_id;
-        $reviewer->program_id = $request->program_id;
-        $reviewer->college_id = $request->college_id;
-        $reviewer->school_year = $request->school_year;
-        $reviewer->save();
+        $reviewer = Reviewer::create([
+            'reviewer_name' => $request->reviewer_name,
+            'reviewer_description' => $request->reviewer_description,
+            'program_id' => $request->program_id,
+            'college_id' => $request->college_id,
+            'school_year' => $request->school_year,
+        ]);
 
-        // Return success response with created reviewer data
+        if ($request->topic_ids) {
+            $reviewer->topics()->attach($request->topic_ids);
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Reviewer created successfully!',
-            'data' => $reviewer
-        ], 201); // HTTP 201 for "Created"
+            'data' => $reviewer->load('topics', 'college', 'program'),
+        ], 201);
     }
 
     /**
@@ -108,11 +117,10 @@ class ReviewerController extends Controller
      */
     public function show(Reviewer $reviewer)
     {
-        // Return the reviewer data along with related data
         return response()->json([
             'status' => 'success',
-            'message' => 'Reviewer details retrieved successfully.',
-            'data' => $reviewer->load(['topic', 'subtopic', 'program', 'college'])
+            'message' => 'Reviewer retrieved successfully.',
+            'data' => $reviewer->load(['college', 'program']),
         ], 200);
     }
 
@@ -121,40 +129,35 @@ class ReviewerController extends Controller
      */
     public function update(Request $request, Reviewer $reviewer)
     {
-        // Validate incoming data
         $validator = Validator::make($request->all(), [
             'reviewer_name' => 'required|string|max:255',
-            'reviewer_description' => 'required|string',
-            'topic_id' => 'nullable|exists:topics,id',
-            'subtopic_id' => 'nullable|exists:subtopics,id',
+            'reviewer_description' => 'required',
             'program_id' => 'required|exists:programs,id',
             'college_id' => 'required|exists:colleges,id',
             'school_year' => 'nullable|integer',
+            'topic_ids' => 'nullable|array',
+            'topic_ids.*' => 'exists:topics,id',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()
-            ], 400); // Bad Request
+            return response()->json(['status' => 'error', 'message' => $validator->errors()], 400);
         }
 
-        // Update the reviewer record
-        $reviewer->reviewer_name = $request->reviewer_name;
-        $reviewer->reviewer_description = $request->reviewer_description;
-        $reviewer->topic_id = $request->topic_id;
-        $reviewer->subtopic_id = $request->subtopic_id;
-        $reviewer->program_id = $request->program_id;
-        $reviewer->college_id = $request->college_id;
-        $reviewer->school_year = $request->school_year;
-        $reviewer->save();
+        $reviewer->update([
+            'reviewer_name' => $request->reviewer_name,
+            'reviewer_description' => $request->reviewer_description,
+            'program_id' => $request->program_id,
+            'college_id' => $request->college_id,
+            'school_year' => $request->school_year,
+        ]);
 
-        // Return success response with updated reviewer data
+        $reviewer->topics()->sync($request->topic_ids);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Reviewer updated successfully!',
-            'data' => $reviewer
-        ], 200); // HTTP 200 for "OK"
+            'message' => 'Reviewer updated successfully.',
+            'data' => $reviewer->load('topics', 'college', 'program'),
+        ], 200);
     }
 
     /**
@@ -162,13 +165,132 @@ class ReviewerController extends Controller
      */
     public function destroy(Reviewer $reviewer)
     {
-        // Delete the reviewer record
+        $reviewer->topics()->detach();
+
         $reviewer->delete();
 
-        // Return success response after deletion
         return response()->json([
             'status' => 'success',
-            'message' => 'Reviewer deleted successfully.'
-        ], 200); // HTTP 200 for "OK"
+            'message' => 'Reviewer deleted successfully.',
+        ], 200);
+    }
+
+    public function getQuestions() {}
+
+    public function getByCollege($id)
+    {
+        $reviewers = Reviewer::where('college_id', $id)
+            ->with(['topics', 'college', 'program'])
+            ->paginate(6);
+
+        if ($reviewers->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No reviewers found for the specified college.',
+                'data' => [
+                    'reviewers' => [],
+                    'pagination' => [
+                        'current_page' => $reviewers->currentPage(),
+                        'total_pages' => $reviewers->lastPage(),
+                        'total_items' => $reviewers->total(),
+                        'per_page' => $reviewers->perPage(),
+                        'first_page_url' => $reviewers->url(1),
+                        'last_page_url' => $reviewers->url($reviewers->lastPage()),
+                        'next_page_url' => $reviewers->nextPageUrl(),
+                        'prev_page_url' => $reviewers->previousPageUrl(),
+                    ]
+                ]
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Reviewers retrieved successfully.',
+            'data' => [
+                'reviewers' => $reviewers->items(),
+                'pagination' => [
+                    'current_page' => $reviewers->currentPage(),
+                    'total_pages' => $reviewers->lastPage(),
+                    'total_items' => $reviewers->total(),
+                    'per_page' => $reviewers->perPage(),
+                    'first_page_url' => $reviewers->url(1),
+                    'last_page_url' => $reviewers->url($reviewers->lastPage()),
+                    'next_page_url' => $reviewers->nextPageUrl(),
+                    'prev_page_url' => $reviewers->previousPageUrl(),
+                ]
+            ]
+        ], 200);
+    }
+    public function getByProgram($id)
+    {
+        $reviewers = Reviewer::where('program_id', $id)
+            ->with(['topics', 'college', 'program'])
+            ->paginate(6);
+
+        if ($reviewers->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No reviewers found for the specified program.',
+                'data' => [
+                    'reviewers' => [],
+                    'pagination' => [
+                        'current_page' => $reviewers->currentPage(),
+                        'total_pages' => $reviewers->lastPage(),
+                        'total_items' => $reviewers->total(),
+                        'per_page' => $reviewers->perPage(),
+                        'first_page_url' => $reviewers->url(1),
+                        'last_page_url' => $reviewers->url($reviewers->lastPage()),
+                        'next_page_url' => $reviewers->nextPageUrl(),
+                        'prev_page_url' => $reviewers->previousPageUrl(),
+                    ]
+                ]
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Reviewers retrieved successfully.',
+            'data' => [
+                'reviewers' => $reviewers->items(),
+                'pagination' => [
+                    'current_page' => $reviewers->currentPage(),
+                    'total_pages' => $reviewers->lastPage(),
+                    'total_items' => $reviewers->total(),
+                    'per_page' => $reviewers->perPage(),
+                    'first_page_url' => $reviewers->url(1),
+                    'last_page_url' => $reviewers->url($reviewers->lastPage()),
+                    'next_page_url' => $reviewers->nextPageUrl(),
+                    'prev_page_url' => $reviewers->previousPageUrl(),
+                ]
+            ]
+        ], 200);
+    }
+
+    public function getReviewer(Request $request)
+    {
+        $collegeId = $request->query('college_id');
+        $programId = $request->query('program_id');
+        // $page = $request->query('page', 1);
+
+        $query = Reviewer::query();
+
+        if ($collegeId) {
+            $query->where('college_id', $collegeId);
+        }
+        if ($programId) {
+            $query->where('program_id', $programId);
+        }
+
+
+        $reviewer = $query->firstOrFail();
+        // Log::info('Reviewer', $reviewer);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Reviewer retrieved successfully.',
+            'data' => [
+                'reviewer' => $reviewer,
+            ]
+        ], 200);
     }
 }

@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('questions', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('reviewer_attempts', function (Blueprint $table) {
+            //
+            $table->timestamp('expire_time')->nullable();
         });
     }
 
@@ -22,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('questions');
+        Schema::table('reviewer_attempts', function (Blueprint $table) {
+            $table->dropColumn('expire_time');
+        });
     }
 };

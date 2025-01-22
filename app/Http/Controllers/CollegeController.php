@@ -114,6 +114,17 @@ class CollegeController extends Controller
             'data' => $college
         ], 200);
     }
+    public function getCollegeUsers(College $college)
+    {
+        // Load related programs when showing a specific college
+        $college->load('users');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'College details retrieved successfully.',
+            'data' => $college
+        ], 200);
+    }
 
     /**
      * Update the specified resource in storage.
@@ -123,6 +134,7 @@ class CollegeController extends Controller
         // Validate incoming request for updating college
         $validator = Validator::make($request->all(), [
             'college_name' => 'required|string', // Assuming the college name is the only updatable field
+            'short_name' => 'required|string', // Assuming the college name is the only updatable field
         ]);
 
         if ($validator->fails()) {
@@ -134,6 +146,7 @@ class CollegeController extends Controller
 
         // Update the college details
         $college->college_name = $request->college_name;
+        $college->short_name = $request->short_name;
         $college->save();
 
         return response()->json([

@@ -11,17 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reviewers', function (Blueprint $table) {
+        Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            $table->string('reviewer_name');
-            $table->text('reviewer_description');
-            
+            $table->string('question_content');
+            $table->string('correct_answer');
+            $table->string('question_point');
+            $table->foreignId('reviewer_id')->constrained()->onDelete('cascade');
             $table->foreignId('topic_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('subtopic_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignId('program_id')->constrained()->onDelete('cascade');
-            $table->foreignId('college_id')->constrained()->onDelete('cascade');
-
-            $table->integer('school_year')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reviewers');
+        Schema::dropIfExists('questions');
     }
 };

@@ -11,62 +11,78 @@ class SubtopicController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch all subtopics with related topic, program, and college (eager loading)
-        $subtopics = Subtopic::with('topic', 'program', 'college')->get();
+        $query = Subtopic::with('topic');
 
-        // Check if no subtopics are found
+        if ($request->has('topic_id')) {
+            $query->where('topic_id', $request->topic_id);
+        }
+        if ($request->has('id')) {
+            $query->where('id', $request->id);
+        }
+
+        $subtopics = $query->paginate(6);
+
         if ($subtopics->isEmpty()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'No subtopics found.',
                 'data' => []
-            ], 404); // HTTP 404 for "Not Found"
+            ], 404);
         }
 
-        // Return subtopics with success message
         return response()->json([
             'status' => 'success',
             'message' => 'Subtopics retrieved successfully.',
-            'data' => $subtopics
-        ], 200); // HTTP 200 for "OK"
+            'data' => [
+                'subtopics' => $subtopics->items(),
+                'pagination' => [
+                    'current_page' => $subtopics->currentPage(),
+                    'total_pages' => $subtopics->lastPage(),
+                    'total_items' => $subtopics->total(),
+                    'per_page' => $subtopics->perPage(),
+                    'first_page_url' => $subtopics->url(1),
+                    'last_page_url' => $subtopics->url($subtopics->lastPage()),
+                    'next_page_url' => $subtopics->nextPageUrl(),
+                    'prev_page_url' => $subtopics->previousPageUrl(),
+                ],
+            ],
+        ], 200);
     }
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        // Validate incoming request data
+        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'subtopic_name' => 'required|string|max:255',
+            'subtopic_description' => 'required|string',
             'topic_id' => 'required|exists:topics,id',
-            'program_id' => 'required|exists:programs,id',
-            'college_id' => 'required|exists:colleges,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => $validator->errors()
-            ], 400); // HTTP 400 for "Bad Request"
+                'message' => $validator->errors(),
+            ], 400);
         }
 
         // Create a new subtopic
         $subtopic = Subtopic::create([
             'subtopic_name' => $request->subtopic_name,
+            'subtopic_description' => $request->subtopic_description,
             'topic_id' => $request->topic_id,
-            'program_id' => $request->program_id,
-            'college_id' => $request->college_id,
         ]);
 
-        // Return success response with the newly created subtopic
         return response()->json([
             'status' => 'success',
             'message' => 'Subtopic created successfully!',
-            'data' => $subtopic
-        ], 201); // HTTP 201 for "Created"
+            'data' => $subtopic,
+        ], 201);
     }
 
     /**
@@ -74,24 +90,21 @@ class SubtopicController extends Controller
      */
     public function show(string $id)
     {
-        // Fetch a specific subtopic by ID
-        $subtopic = Subtopic::with('topic', 'program', 'college')->find($id);
+        // Fetch a specific subtopic with its related topic
+        $subtopic = Subtopic::with('topic')->find($id);
 
-        // Check if subtopic exists
         if (!$subtopic) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Subtopic not found.',
-                'data' => null
-            ], 404); // HTTP 404 for "Not Found"
+            ], 404);
         }
 
-        // Return the subtopic data
         return response()->json([
             'status' => 'success',
             'message' => 'Subtopic retrieved successfully.',
-            'data' => $subtopic
-        ], 200); // HTTP 200 for "OK"
+            'data' => $subtopic,
+        ], 200);
     }
 
     /**
@@ -102,44 +115,39 @@ class SubtopicController extends Controller
         // Fetch the subtopic to update
         $subtopic = Subtopic::find($id);
 
-        // Check if subtopic exists
         if (!$subtopic) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Subtopic not found.',
-                'data' => null
-            ], 404); // HTTP 404 for "Not Found"
+            ], 404);
         }
 
-        // Validate incoming request data
+        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'subtopic_name' => 'required|string|max:255',
+            'subtopic_description' => 'required|string',
             'topic_id' => 'required|exists:topics,id',
-            'program_id' => 'required|exists:programs,id',
-            'college_id' => 'required|exists:colleges,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => $validator->errors()
-            ], 400); // HTTP 400 for "Bad Request"
+                'message' => $validator->errors(),
+            ], 400);
         }
 
-        // Update the subtopic with validated data
+        // Update the subtopic
         $subtopic->update([
             'subtopic_name' => $request->subtopic_name,
+            'subtopic_description' => $request->subtopic_description,
             'topic_id' => $request->topic_id,
-            'program_id' => $request->program_id,
-            'college_id' => $request->college_id,
         ]);
 
-        // Return success response
         return response()->json([
             'status' => 'success',
             'message' => 'Subtopic updated successfully!',
-            'data' => $subtopic
-        ], 200); // HTTP 200 for "OK"
+            'data' => $subtopic,
+        ], 200);
     }
 
     /**
@@ -147,25 +155,101 @@ class SubtopicController extends Controller
      */
     public function destroy(string $id)
     {
-        // Fetch the subtopic to delete
+        // Fetch the subtopic
         $subtopic = Subtopic::find($id);
 
-        // Check if subtopic exists
         if (!$subtopic) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Subtopic not found.',
-                'data' => null
-            ], 404); // HTTP 404 for "Not Found"
+            ], 404);
         }
 
         // Delete the subtopic
         $subtopic->delete();
 
-        // Return success response
         return response()->json([
             'status' => 'success',
-            'message' => 'Subtopic deleted successfully!'
-        ], 200); // HTTP 200 for "OK"
+            'message' => 'Subtopic deleted successfully!',
+        ], 200);
     }
+
+    public function getSubtopics(Request $request)
+    {
+        $topicId = $request->query('topic_id');
+        $page = $request->query('page', 1); 
+
+        $query = Subtopic::query();
+
+        if ($topicId) {
+            $query->where('topic_id', $topicId);
+        }
+
+        
+
+        $subtopics = $query->paginate(6, ['*'], 'page', $page);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Subtopics retrieved successfully.',
+            'data' => [
+                'subtopics' => $subtopics->items(),
+                'pagination' => [
+                    'current_page' => $subtopics->currentPage(),
+                    'total_pages' => $subtopics->lastPage(),
+                    'total_items' => $subtopics->total(),
+                    'per_page' => $subtopics->perPage(),
+                    'first_page_url' => $subtopics->url(1),
+                    'last_page_url' => $subtopics->url($subtopics->lastPage()),
+                    'next_page_url' => $subtopics->nextPageUrl(),
+                    'prev_page_url' => $subtopics->previousPageUrl(),
+                ]
+            ]
+        ], 200);
+    }
+
+    /**
+     * Get subtopics by topic ID.
+     */
+    // public function getSubtopicsByTopic(Request $request)
+    // {
+    //     $topicId = $request->query('topic_id');
+
+    //     if (!$topicId) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Topic ID is required.',
+    //         ], 400);
+    //     }
+
+    //     $subtopics = Subtopic::with('topic')
+    //         ->where('topic_id', $topicId)
+    //         ->paginate(6);
+
+    //     if ($subtopics->isEmpty()) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'No subtopics found for this topic.',
+    //             'data' => []
+    //         ], 404);
+    //     }
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Subtopics retrieved successfully.',
+    //         'data' => [
+    //             'subtopics' => $subtopics->items(),
+    //             'pagination' => [
+    //                 'current_page' => $subtopics->currentPage(),
+    //                 'total_pages' => $subtopics->lastPage(),
+    //                 'total_items' => $subtopics->total(),
+    //                 'per_page' => $subtopics->perPage(),
+    //                 'first_page_url' => $subtopics->url(1),
+    //                 'last_page_url' => $subtopics->url($subtopics->lastPage()),
+    //                 'next_page_url' => $subtopics->nextPageUrl(),
+    //                 'prev_page_url' => $subtopics->previousPageUrl(),
+    //             ],
+    //         ],
+    //     ], 200);
+    // }
 }

@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subtopics', function (Blueprint $table) {
+        Schema::create('reviewers', function (Blueprint $table) {
             $table->id();
-            $table->string('subtopic_name');
-            $table->foreignId('topic_id')->constrained()->onDelete('cascade');
-            $table->foreignId('program_id')->constrained()->onDelete('cascade');
+            $table->string('reviewer_name');
+            $table->text('reviewer_description');
             $table->foreignId('college_id')->constrained()->onDelete('cascade');
+            $table->foreignId('program_id')->constrained()->onDelete('cascade');
+            $table->integer('school_year')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subtopics');
+        Schema::dropIfExists('reviewers');
     }
 };

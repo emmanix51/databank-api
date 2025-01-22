@@ -119,10 +119,11 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($userId)
     {
         //
-        $user = User::find($id);
+        // $user = User::find($id);
+        $user = User::with(['college', 'program'])->find($userId);
         if (!$user) {
             return response()->json(['status'=>'error',
                                     'message'=>'user not found'], 404);
@@ -289,7 +290,89 @@ public function getByCollegeWithRole(Request $request)
     ], 200);
 }
 
+public function getUsers(Request $request)
+{
+    // Retrieve query parameters with default values
+    $collegeId = $request->query('college_id');
+    $role = $request->query('role');
+    $page = $request->query('page', 1); // Default to page 1 if not provided
 
+    // Build the query dynamically
+    $query = User::query();
+
+    if ($collegeId) {
+        $query->where('college_id', $collegeId);
+    }
+
+    if ($role) {
+        $query->where('role', $role);
+    }
+
+    // Execute the query with pagination
+    $users = $query->with('college', 'program')->paginate(6, ['*'], 'page', $page);
+
+    // Return the users with pagination info (even if the result is an empty list)
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Users retrieved successfully.',
+        'data' => [
+            'users' => $users->items(), 
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'total_pages' => $users->lastPage(),
+                'total_items' => $users->total(),
+                'per_page' => $users->perPage(),
+                'first_page_url' => $users->url(1),
+                'last_page_url' => $users->url($users->lastPage()),
+                'next_page_url' => $users->nextPageUrl(),
+                'prev_page_url' => $users->previousPageUrl(),
+            ]
+        ]
+    ], 200);
+}
+
+public function bulkStore(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'users' => 'required|array',  
+        'users.*.idnum' => 'required|integer|unique:users', 
+        'users.*.first_name' => 'required|string|max:255',
+        'users.*.last_name' => 'required|string|max:255',
+        'users.*.email' => 'required|email|unique:users,email',
+        'users.*.password' => 'required|string|confirmed|min:6',
+        'users.*.role' => 'required|in:admin,faculty,student,dean,programhead',
+        'users.*.year_level' => 'nullable|integer|max:4',
+        'users.*.college_id' => 'required|exists:colleges,id',
+        'users.*.program_id' => 'required|exists:programs,id',
+        'users.*.phone_number' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['status' => 'error', 'message' => $validator->errors()], 400);
+    }
+
+    $usersToInsert = [];
+    foreach ($request->users as $userData) {
+        $usersToInsert[] = [
+            'idnum' => $userData['idnum'],
+            'first_name' => $userData['first_name'],
+            'last_name' => $userData['last_name'],
+            'email' => $userData['email'],
+            'password' => bcrypt($userData['password']),
+            'role' => $userData['role'],
+            'year_level' => $userData['year_level'],
+            'college_id' => $userData['college_id'],
+            'program_id' => $userData['program_id'],
+            'phone_number' => $userData['phone_number'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+    }
+
+    User::insert($usersToInsert);
+
+    return response()->json(['status' => 'success', 'message' => 'Users created successfully!'], 201);
+}
 
 
 // public function getByCollegeWithRole(Request $request, $college_id, $role)
